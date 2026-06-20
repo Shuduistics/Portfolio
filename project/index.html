@@ -34,6 +34,35 @@
     [data-railnav]:hover [data-raillabel]{ opacity:1; }
   }
   @media (max-width:1080px){ [data-rail]{display:none !important;} }
+
+  /* ===== Mobile optimization ===== */
+  @media (max-width:760px){
+    /* Nav: keep brand + CTA, drop the inline section links */
+    nav > div{ height:60px !important; padding-left:18px !important; padding-right:18px !important; gap:12px !important; }
+    nav a[data-nav]{ display:none !important; }
+
+    /* Tighter section gutters on small screens */
+    header[data-section="top"]{ padding:60px 18px 40px !important; }
+    section[data-section]{ padding-top:58px !important; padding-bottom:58px !important; padding-left:18px !important; padding-right:18px !important; }
+    footer > div{ padding-left:18px !important; padding-right:18px !important; }
+
+    /* Hero stat grid: 4 fixed cols -> 2 */
+    header[data-section="top"] [style*="repeat(4,auto)"]{ grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:22px 28px !important; }
+
+    /* Process timeline: collapse the 2-column layout into a single left-aligned column */
+    [data-timeline] > div[aria-hidden]{ left:7px !important; }
+    [data-timeline] > div[data-reveal]{ flex-direction:column !important; margin-bottom:22px !important; }
+    [data-timeline] > div[data-reveal] > div{ width:100% !important; padding-left:34px !important; padding-right:0 !important; }
+    [data-timeline] > div[data-reveal] > span[aria-hidden]{ left:7px !important; }
+    [data-timeline] [style*="justify-content:flex-end"]{ justify-content:flex-start !important; }
+    [data-timeline] p[style*="text-align:right"]{ text-align:left !important; }
+    [data-timeline] span[style*="-webkit-text-stroke"]{ font-size:34px !important; }
+  }
+
+  /* Card grids overflow on phones (min track > viewport) -> single column */
+  @media (max-width:640px){
+    [style*="repeat(auto-fit"]{ grid-template-columns:1fr !important; }
+  }
 </style>
 </helmet>
 
