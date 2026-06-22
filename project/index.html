@@ -1066,16 +1066,20 @@ class Component extends DCLogic {
       return params.toString();
     };
     const forwardToZoho = (fd) => {
-      const payload = { source: 'mashood-ahmad.netlify.app contact form', submitted_at: new Date().toISOString() };
-      fd.forEach((v, k) => { if (k !== 'bot-field') payload[k] = typeof v === 'string' ? v : ''; });
-      // text/plain + no-cors keeps it a "simple" cross-origin request (no preflight); the
-      // body is still JSON that Zoho Flow can parse. Fire-and-forget — never blocks the UX.
+      // Send as form-urlencoded key/value pairs: it stays a "simple" cross-origin
+      // request (no CORS preflight, works from the browser) AND Zoho Flow parses it
+      // into named fields. A JSON body would need Content-Type:application/json,
+      // which triggers a preflight Zoho's webhook doesn't answer. Fire-and-forget.
+      const params = new URLSearchParams();
+      params.append('source', 'mashood-ahmad.netlify.app contact form');
+      params.append('submitted_at', new Date().toISOString());
+      fd.forEach((v, k) => { if (k !== 'bot-field') params.append(k, typeof v === 'string' ? v : ''); });
       try {
         fetch(ZOHO_WEBHOOK, {
           method: 'POST',
           mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-          body: JSON.stringify(payload)
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+          body: params.toString()
         }).catch(() => {});
       } catch (e) {}
     };
