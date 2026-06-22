@@ -126,6 +126,14 @@
   [data-form] .field::placeholder{ color:#6B7378; }
   [data-form] .field:focus{ outline:none; border-color:var(--accent,#4DE3FF); }
   [data-form] select.field{ appearance:none; -webkit-appearance:none; cursor:pointer; }
+
+  /* ===== Booking modal (Zoho Bookings) ===== */
+  [data-booking-modal]{ position:fixed; inset:0; z-index:120; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(5,7,10,0.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  [data-booking-modal].open{ display:flex; }
+  [data-booking-modal] .bk-dialog{ position:relative; width:100%; max-width:920px; height:min(86vh,760px); background:#0E1116; border:1px solid rgba(255,255,255,0.12); border-radius:16px; overflow:hidden; box-shadow:0 30px 80px -20px rgba(0,0,0,0.8); }
+  [data-booking-modal] iframe{ width:100%; height:100%; border:0; display:block; background:#fff; }
+  [data-booking-modal] .bk-close{ position:absolute; top:10px; right:10px; z-index:2; width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,0.18); background:rgba(14,17,22,0.92); color:#E8ECEC; font-size:16px; line-height:1; cursor:pointer; display:grid; place-items:center; }
+  [data-booking-modal] .bk-close:hover{ border-color:var(--accent,#4DE3FF); color:var(--accent,#4DE3FF); }
 </style>
 </helmet>
 
@@ -152,8 +160,7 @@
         <a data-nav="expertise" href="index.html#expertise" style="text-decoration:none;color:#99A1A6;font-size:14px;font-weight:500;transition:color .2s;" style-hover="color:#E8ECEC;">Expertise</a>
         <a data-nav="work" href="index.html#work" style="text-decoration:none;color:#99A1A6;font-size:14px;font-weight:500;transition:color .2s;" style-hover="color:#E8ECEC;">Case Studies</a>
         <a data-nav="faq" href="index.html#faq" style="text-decoration:none;color:#99A1A6;font-size:14px;font-weight:500;transition:color .2s;" style-hover="color:#E8ECEC;">FAQ</a>
-        <!-- TODO: replace {{BOOKING_LINK}} with your Zoho Bookings / Calendly URL -->
-        <a href="{{BOOKING_LINK}}" aria-label="Book a free consultation with Mashood Ahmad" style="text-decoration:none;background:var(--accent,#4DE3FF);color:#06120C;padding:9px 17px;border-radius:10px;font-size:14px;font-weight:600;transition:transform .15s,box-shadow .2s;" style-hover="transform:translateY(-1px);box-shadow:0 6px 22px rgba(77,227,255,0.28);">Book a Free Consultation</a>
+        <a href="https://reformisautomation.zohobookings.com/#/4938778000000039046" data-booking="" target="_blank" rel="noopener" aria-label="Book a free consultation with Mashood Ahmad" style="text-decoration:none;background:var(--accent,#4DE3FF);color:#06120C;padding:9px 17px;border-radius:10px;font-size:14px;font-weight:600;transition:transform .15s,box-shadow .2s;" style-hover="transform:translateY(-1px);box-shadow:0 6px 22px rgba(77,227,255,0.28);">Book a Free Consultation</a>
       </div>
     </div>
   </nav>
@@ -231,6 +238,14 @@
 
     </div>
   </section>
+
+  <!-- Booking modal (Zoho Bookings) -->
+  <div data-booking-modal="" role="dialog" aria-modal="true" aria-label="Book a free consultation" aria-hidden="true">
+    <div class="bk-dialog">
+      <button type="button" class="bk-close" data-booking-close="" aria-label="Close booking">✕</button>
+      <iframe data-booking-frame="" title="Zoho Bookings — book a free consultation" src="about:blank" loading="lazy" allow="payment"></iframe>
+    </div>
+  </div>
 
   <!-- FOOTER -->
   <footer style="position:relative;z-index:1;border-top:1px solid rgba(255,255,255,0.06);">
@@ -389,6 +404,32 @@ class Component extends DCLogic {
     });
   }
 
+  initBooking() {
+    const EMBED = 'https://reformisautomation.zohobookings.com/portal-embed#/4938778000000039046';
+    const modal = document.querySelector('[data-booking-modal]');
+    if (!modal) return;
+    const frame = modal.querySelector('[data-booking-frame]');
+    let loaded = false;
+    const open = () => {
+      if (!loaded && frame) { frame.src = EMBED; loaded = true; }
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    };
+    const close = () => {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    };
+    document.querySelectorAll('[data-booking]').forEach((el) => {
+      el.addEventListener('click', (e) => { e.preventDefault(); open(); });
+    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+    const closeBtn = modal.querySelector('[data-booking-close]');
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) close(); });
+  }
+
   initIcons() {
     const run = () => {
       try {
@@ -462,6 +503,7 @@ class Component extends DCLogic {
     this.initScrollSpy();
     this.initCopy();
     this.initForm();
+    this.initBooking();
     this.initIcons();
   }
 
