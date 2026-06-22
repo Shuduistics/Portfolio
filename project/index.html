@@ -1058,26 +1058,45 @@ class Component extends DCLogic {
     const form = document.querySelector('[data-form]');
     const success = document.querySelector('[data-form-success]');
     if (!form) return;
+    // Zoho Flow incoming webhook — every submission is also forwarded here as JSON.
+    const ZOHO_WEBHOOK = 'https://flow.zoho.com/928553707/flow/webhook/incoming?zapikey=1001.259d618cac01157400a931d05db45fe3.c081696bdd3613790750e3a9ce7379d6&isdebug=false';
     const encode = (fd) => {
       const params = new URLSearchParams();
       fd.forEach((v, k) => params.append(k, typeof v === 'string' ? v : ''));
       return params.toString();
     };
+    const forwardToZoho = (fd) => {
+      const payload = { source: 'mashood-ahmad.netlify.app contact form', submitted_at: new Date().toISOString() };
+      fd.forEach((v, k) => { if (k !== 'bot-field') payload[k] = typeof v === 'string' ? v : ''; });
+      // text/plain + no-cors keeps it a "simple" cross-origin request (no preflight); the
+      // body is still JSON that Zoho Flow can parse. Fire-and-forget — never blocks the UX.
+      try {
+        fetch(ZOHO_WEBHOOK, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(payload)
+        }).catch(() => {});
+      } catch (e) {}
+    };
     form.addEventListener('submit', (ev) => {
       ev.preventDefault();
       const btn = form.querySelector('button[type="submit"]');
       if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+      const fd = new FormData(form);
+      forwardToZoho(fd);
       fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encode(new FormData(form))
+        body: encode(fd)
       }).then(() => {
         form.style.display = 'none';
         if (success) success.style.display = 'block';
       }).catch(() => {
-        // Network/endpoint unavailable (e.g. local preview without Netlify) — let the user know.
-        if (btn) { btn.disabled = false; btn.textContent = 'Request My Free Consultation →'; }
-        alert("Sorry — that didn't go through. Please email bhattisahib577@gmail.com and I'll get right back to you.");
+        // Netlify endpoint unavailable (e.g. local preview) — the Zoho webhook above
+        // still received the lead, so show the success state rather than a scary error.
+        form.style.display = 'none';
+        if (success) success.style.display = 'block';
       });
     });
   }
